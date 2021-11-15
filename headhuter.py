@@ -1,3 +1,4 @@
+import datetime
 import json
 import requests
 
@@ -19,8 +20,9 @@ def programmer_vacancies():
             headers=HEADERS,
             params=params)
     response.raise_for_status()
-    print(json.dumps(response.json(), indent=4, ensure_ascii=False))
+    return response.json()
 
 
 if __name__ == '__main__':
-    programmer_vacancies()
+    print(f'Общий список вакансий "{params["text"]}":')
+    print(json.dumps(programmer_vacancies(), indent=4, ensure_ascii=False))
