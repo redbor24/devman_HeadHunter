@@ -2,6 +2,7 @@ import datetime
 import json
 import operator
 import requests
+from requests import exceptions
 
 HH_BASE_URL = 'https://api.hh.ru/'
 VAC_PER_PAGE = 20
@@ -21,13 +22,13 @@ lang_details = {
 }
 
 proglangs = {
-    'Python': 0,
-    'Java': 0,
-    'JavaScript': 0,
-    'C++': 0,
-    'C#': 0,
-    'Delphi': 0,
-    'GO': 0,
+    # 'Python': 0,
+    # 'Java': 0,
+    # 'JavaScript': 0,
+    # 'C++': 0,
+    # 'C#': 0,
+    # 'Delphi': 0,
+    # 'GO': 0,
     'PHP': 0,
     'Ruby': 0,
 }
@@ -89,24 +90,38 @@ def print_lang_average_salaries(lang, vac_per_page):
         print(vac_n, get_predict_rub_salary(vac))
 
 
-def get_proglang_stat(proglang, vac_per_page):
-    params = {'text': proglang, 'per_page': vac_per_page}
-    resp = get_programmer_vacancies(HEADERS, params)
+def get_proglang_stat(proglang, proglang_stat, vac_per_page):
+    print(f'Подсчёт количества вакансий для "{proglang}"', end='')
+    params = {
+        'text': proglang,
+        'per_page': vac_per_page,
+        'page': '0',
+    }
     salary_sum = 0
     vacs_processed = 0
-    for vac_n, vac in enumerate(resp['items']):
-        _ = get_predict_rub_salary(vac)
-        if _ is not None:
-            salary_sum += _
-            vacs_processed += 1
-    average_salary = salary_sum / vacs_processed
-    return {
-        proglang: {
-            'vacancies_found': resp["found"],
-            'vacancies_processed': vacs_processed,
-            'average_salary': int(average_salary)
-        }
+    page = 0
+    while True:
+        try:
+            resp = get_programmer_vacancies(HEADERS, params)
+        except exceptions.HTTPError:
+            break
+        for vac_n, vac in enumerate(resp['items']):
+            _ = get_predict_rub_salary(vac)
+            if _ is not None:
+                salary_sum += _
+                vacs_processed += 1
+        page += 1
+        params['page'] = page
+        print('.', end='')
+
+    print('')
+    proglang_stat_values = {
+        'vacancies_found': resp["found"],
+        'vacancies_processed': vacs_processed,
+        'average_salary': int(salary_sum / vacs_processed)
     }
+    proglang_stat[proglang] = proglang_stat_values
+    return proglang_stat_values
 
 
 if __name__ == '__main__':
@@ -138,5 +153,15 @@ if __name__ == '__main__':
     # print_lang_average_salaries('Python', 3)
 
     # Статистика по ЗП по ЯП
+    # for lang_n, lang in enumerate(proglangs):
+    #     print(get_proglang_stat(lang, 100))
+
+    # stat = {}
+    # stat = get_proglang_stat('Python', stat, 100)
+    # print(stat)
+    # exit(0)
+
+    stat = {}
     for lang_n, lang in enumerate(proglangs):
-        print(get_proglang_stat(lang, VAC_PER_PAGE))
+        get_proglang_stat(lang, stat, 100)
+    print(stat)
