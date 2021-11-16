@@ -4,6 +4,7 @@ import operator
 import requests
 
 HH_BASE_URL = 'https://api.hh.ru/'
+VAC_PER_PAGE = 20
 
 HEADERS = {
     'content-type': 'application/json; charset=UTF-8',
@@ -11,6 +12,12 @@ HEADERS = {
 
 hh_params = {
     'text': 'программист',
+}
+
+lang_details = {
+    'vacancies_found': 0,
+    'vacancies_processed': 0,
+    'average_salary': 0,
 }
 
 proglangs = {
@@ -40,10 +47,10 @@ def get_proglang_distribution():
                                     reverse=True)}
 
 
-def programmer_vacancies(params):
+def get_programmer_vacancies(headers, params):
     response = requests.get(
         HH_BASE_URL + r'vacancies/',
-        headers=HEADERS,
+        headers=headers,
         params=params)
     response.raise_for_status()
     return response.json()
@@ -57,8 +64,11 @@ def get_vac_details(vacancy):
             'gross': vac_salary['gross'], }
 
 
-def predict_rub_salary(vacancy):
+def get_predict_rub_salary(vacancy):
     vac_sal = vacancy['salary']
+
+    if vac_sal is None:
+        return None
 
     if vac_sal['currency'] is None:
         return None
@@ -72,24 +82,40 @@ def predict_rub_salary(vacancy):
     return (vac_sal['from'] + vac_sal['to']) / 2
 
 
-def get_python_average_salaries():
-    hh_params['per_page'] = 20
-    hh_params['text'] = 'Python'
-    res = programmer_vacancies(hh_params)
+def print_lang_average_salaries(lang, vac_per_page):
+    params = {'text': lang, 'per_page': vac_per_page}
+    res = get_programmer_vacancies(HEADERS, params)
     for vac_n, vac in enumerate(res['items']):
-        try:
-            print(vac_n, predict_rub_salary(vac))
-        except TypeError:
-            print(vac_n, None)
+        print(vac_n, get_predict_rub_salary(vac))
+
+
+def get_proglang_stat(proglang, vac_per_page):
+    params = {'text': proglang, 'per_page': vac_per_page}
+    resp = get_programmer_vacancies(HEADERS, params)
+    salary_sum = 0
+    vacs_processed = 0
+    for vac_n, vac in enumerate(resp['items']):
+        _ = get_predict_rub_salary(vac)
+        if _ is not None:
+            salary_sum += _
+            vacs_processed += 1
+    average_salary = salary_sum / vacs_processed
+    return {
+        proglang: {
+            'vacancies_found': resp["found"],
+            'vacancies_processed': vacs_processed,
+            'average_salary': int(average_salary)
+        }
+    }
 
 
 if __name__ == '__main__':
     # print(f'Общий список вакансий "{hh_params["text"]}":')
-    # print(json.dumps(programmer_vacancies(hh_params), indent=4, ensure_ascii=False))
+    # print(json.dumps(get_programmer_vacancies(HEADERS, hh_params), indent=4, ensure_ascii=False))
     #
     # # Список вакансий "программист" для Москвы
     # hh_params['area'] = '1'
-    # hh_response = programmer_vacancies(hh_params)
+    # hh_response = get_programmer_vacancies(HEADERS, hh_params)
     # print(json.dumps(hh_response, indent=4, ensure_ascii=False))
     #
     # # Общее количество вакансий
@@ -103,9 +129,14 @@ if __name__ == '__main__':
     # hh_params['date_to'] = today.strftime('%Y-%m-%d')
     # print(f'Количество вакансий "{hh_params["text"]}'
     #       f'" для Москвы за последний месяц: '
-    #       f'{programmer_vacancies(hh_params)["found"]}')
+    #       f'{get_programmer_vacancies(HEADERS, hh_params)["found"]}')
     #
     # print(f'Вакансии по ЯП: {get_proglang_distribution()}')
 
     # ЗП по Питону
-    print(get_python_average_salaries())
+    # print_python_average_salaries(VAC_PER_PAGE)
+    # print_lang_average_salaries('Python', 3)
+
+    # Статистика по ЗП по ЯП
+    for lang_n, lang in enumerate(proglangs):
+        print(get_proglang_stat(lang, VAC_PER_PAGE))
