@@ -57,6 +57,21 @@ def get_vac_details(vacancy):
             'gross': vac_salary['gross'], }
 
 
+def predict_rub_salary(vacancy):
+    vac_sal = vacancy['salary']
+
+    if vac_sal['currency'] is None:
+        return None
+
+    if vac_sal['to'] is None:
+        return vac_sal['from'] * 1.2
+
+    if vac_sal['from'] is None:
+        return vac_sal['to'] * 0.8
+
+    return (vac_sal['from'] + vac_sal['to']) / 2
+
+
 if __name__ == '__main__':
     # print(f'Общий список вакансий "{hh_params["text"]}":')
     # print(json.dumps(programmer_vacancies(hh_params), indent=4, ensure_ascii=False))
@@ -87,6 +102,6 @@ if __name__ == '__main__':
     res = programmer_vacancies(hh_params)
     for vac_n, vac in enumerate(res['items']):
         try:
-            print(vac_n, get_vac_details(vac))
+            print(vac_n, predict_rub_salary(vac))
         except TypeError:
             print(vac_n, None)
