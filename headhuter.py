@@ -13,7 +13,7 @@ hh_params = {
     'text': 'программист',
 }
 
-lang_list = {
+proglangs = {
     'Python': 0,
     'Java': 0,
     'JavaScript': 0,
@@ -28,14 +28,14 @@ lang_list = {
 
 def get_proglang_distribution():
     params = {}
-    for lang_n, lang in enumerate(lang_list):
+    for lang_n, lang in enumerate(proglangs):
         params['text'] = 'программист ' + lang
         response = requests.get(HH_BASE_URL + r'vacancies/', headers=HEADERS, params=params)
         response.raise_for_status()
         _ = response.json()['found']
-        lang_list[lang] = _ if _ > 100 else 0
+        proglangs[lang] = _ if _ > 100 else 0
 
-    return {k: v for k, v in sorted(lang_list.items(),
+    return {k: v for k, v in sorted(proglangs.items(),
                                     key=operator.itemgetter(1),
                                     reverse=True)}
 
@@ -72,6 +72,17 @@ def predict_rub_salary(vacancy):
     return (vac_sal['from'] + vac_sal['to']) / 2
 
 
+def get_python_average_salaries():
+    hh_params['per_page'] = 20
+    hh_params['text'] = 'Python'
+    res = programmer_vacancies(hh_params)
+    for vac_n, vac in enumerate(res['items']):
+        try:
+            print(vac_n, predict_rub_salary(vac))
+        except TypeError:
+            print(vac_n, None)
+
+
 if __name__ == '__main__':
     # print(f'Общий список вакансий "{hh_params["text"]}":')
     # print(json.dumps(programmer_vacancies(hh_params), indent=4, ensure_ascii=False))
@@ -97,11 +108,4 @@ if __name__ == '__main__':
     # print(f'Вакансии по ЯП: {get_proglang_distribution()}')
 
     # ЗП по Питону
-    hh_params['per_page'] = 20
-    hh_params['text'] = 'Python'
-    res = programmer_vacancies(hh_params)
-    for vac_n, vac in enumerate(res['items']):
-        try:
-            print(vac_n, predict_rub_salary(vac))
-        except TypeError:
-            print(vac_n, None)
+    print(get_python_average_salaries())
