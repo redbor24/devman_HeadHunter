@@ -49,26 +49,44 @@ def programmer_vacancies(params):
     return response.json()
 
 
+def get_vac_details(vacancy):
+    vac_salary = vacancy['salary']
+    return {'from': vac_salary['from'],
+            'to': vac_salary['to'],
+            'currency': vac_salary['currency'],
+            'gross': vac_salary['gross'], }
+
+
 if __name__ == '__main__':
-    print(f'Общий список вакансий "{hh_params["text"]}":')
-    print(json.dumps(programmer_vacancies(hh_params), indent=4, ensure_ascii=False))
+    # print(f'Общий список вакансий "{hh_params["text"]}":')
+    # print(json.dumps(programmer_vacancies(hh_params), indent=4, ensure_ascii=False))
+    #
+    # # Список вакансий "программист" для Москвы
+    # hh_params['area'] = '1'
+    # hh_response = programmer_vacancies(hh_params)
+    # print(json.dumps(hh_response, indent=4, ensure_ascii=False))
+    #
+    # # Общее количество вакансий
+    # print(f'Общее количество вакансий "{hh_params["text"]}" для Москвы: '
+    #       f'{hh_response["found"]}')
+    #
+    # # Список вакансий "программист" для Москвы за последний месяц
+    # today = datetime.datetime.today()
+    # hh_params['date_from'] = (today + datetime.timedelta(days=-30)).\
+    #     strftime('%Y-%m-%d')
+    # hh_params['date_to'] = today.strftime('%Y-%m-%d')
+    # print(f'Количество вакансий "{hh_params["text"]}'
+    #       f'" для Москвы за последний месяц: '
+    #       f'{programmer_vacancies(hh_params)["found"]}')
+    #
+    # print(f'Вакансии по ЯП: {get_proglang_distribution()}')
 
-    # Список вакансий "программист" для Москвы
-    hh_params['area'] = '1'
-    hh_response = programmer_vacancies(hh_params)
-    print(json.dumps(hh_response, indent=4, ensure_ascii=False))
-
-    # Общее количество вакансий
-    print(f'Общее количество вакансий "{hh_params["text"]}" для Москвы: '
-          f'{hh_response["found"]}')
-
-    # Список вакансий "программист" для Москвы за последний месяц
-    today = datetime.datetime.today()
-    hh_params['date_from'] = (today + datetime.timedelta(days=-30)).\
-        strftime('%Y-%m-%d')
-    hh_params['date_to'] = today.strftime('%Y-%m-%d')
-    print(f'Количество вакансий "{hh_params["text"]}'
-          f'" для Москвы за последний месяц: '
-          f'{programmer_vacancies(hh_params)["found"]}')
-
-    print(f'Вакансии по ЯП: {get_proglang_distribution()}')
+    # ЗП по Питону
+    hh_params['per_page'] = 20
+    hh_params['text'] = 'Python'
+    res = programmer_vacancies(hh_params)
+    for vac_n, vac in enumerate(res['items']):
+        try:
+            print(vac_n, get_vac_details(vac))
+        except TypeError:
+            print(vac_n, None)
