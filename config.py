@@ -11,15 +11,3 @@ SJ_SECRET_KEY = config('SJ_SECRET_KEY', '')
 SJ_HEADER = {
     'X-Api-App-Id': SJ_SECRET_KEY,
 }
-
-PROG_LANGS = [
-    'Python',
-    'Java',
-    'JavaScript',
-    'C++',
-    'C',
-    'Delphi',
-    'GO',
-    'PHP',
-    'Ruby',
-]

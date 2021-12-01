@@ -9,7 +9,6 @@ from config import (
     HH_HEADER,
     SJ_BASE_URL,
     SJ_HEADER,
-    PROG_LANGS
 )
 
 resources = ['HeadHunter.ru', 'SuperJob.ru']
@@ -157,12 +156,12 @@ def get_proglang_stat_sj(proglang, proglang_stat):
     return proglang_stat
 
 
-def get_stat(resource):
+def get_stat(resource, languages):
     if resource not in resources:
-        return None
+        raise KeyError(resource)
 
     langs = {}
-    for lang_n, lang in enumerate(PROG_LANGS):
+    for lang_n, lang in enumerate(languages):
         langs[lang] = 0
 
     stat = {}
@@ -203,8 +202,23 @@ def print_table(stat, table_caption, column_aligns):
 
 
 if __name__ == '__main__':
-    hh_stat = get_stat('HeadHunter.ru')
-    sj_stat = get_stat('SuperJob.ru')
+    prog_langs = [
+        'Python',
+        'Java',
+        'JavaScript',
+        'C++',
+        'C',
+        'Delphi',
+        'GO',
+        'PHP',
+        'Ruby',
+    ]
 
-    print_table(hh_stat, 'HeadHunter. Москва', col_aligns)
-    print_table(sj_stat, 'SuperJob. Москва', col_aligns)
+    try:
+        hh_stat = get_stat('HeadHunter.ru', prog_langs)
+        sj_stat = get_stat('SuperJob.ru', prog_langs)
+
+        print_table(hh_stat, 'HeadHunter. Москва', col_aligns)
+        print_table(sj_stat, 'SuperJob. Москва', col_aligns)
+    except KeyError as e:
+        print(f'Ошибка! Ресурс {e} не найден')
