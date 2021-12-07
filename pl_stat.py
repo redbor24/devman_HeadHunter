@@ -1,3 +1,4 @@
+import logging
 import math
 
 import requests
@@ -57,7 +58,7 @@ def predict_salary(salary_from, salary_to):
 
 
 def get_proglang_stat_sj(proglang):
-    print(f'Подсчёт количества вакансий для "{proglang}"...')
+    logger.info(f'Подсчёт количества вакансий для "{proglang}"...')
     params = {
         'town': 'Москва',
         'catalogues': '33',
@@ -101,7 +102,7 @@ def get_proglang_stat_sj(proglang):
 
 
 def get_proglang_stat_hh(proglang):
-    print(f'Подсчёт количества вакансий для "{proglang}"...')
+    logger.info(f'Подсчёт количества вакансий для "{proglang}"...')
     params = {
         'text': proglang,
         'per_page': 100,
@@ -138,7 +139,7 @@ def get_proglang_stat_hh(proglang):
 
 
 def get_stat(resource, languages):
-    print(f'Сбор статистики для {resource}.')
+    logger.info(f'Сбор статистики для {resource}.')
     if resource not in resources:
         raise KeyError(resource)
 
@@ -192,11 +193,18 @@ if __name__ == '__main__':
         # 'Ruby',
     ]
 
+    logger = logging.getLogger('pl_stat')
+    logger.setLevel(logging.INFO)
+    log_handler = logging.FileHandler('pl_stat.log')
+    log_foramatter = logging.Formatter('%(asctime)s - %(message)s')
+    log_handler.setFormatter(log_foramatter)
+    logger.addHandler(log_handler)
+
     try:
-        hh_stat = get_stat('HeadHunter.ru', prog_langs)
+        # hh_stat = get_stat('HeadHunter.ru', prog_langs)
         sj_stat = get_stat('SuperJob.ru', prog_langs)
 
-        print_table(hh_stat, 'HeadHunter. Москва', col_aligns)
+        # print_table(hh_stat, 'HeadHunter. Москва', col_aligns)
         print_table(sj_stat, 'SuperJob. Москва', col_aligns)
     except KeyError as e:
         print(f'Ошибка! Ресурс {e} не найден')
