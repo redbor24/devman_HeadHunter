@@ -46,11 +46,9 @@ def predict_salary_sj(vacancy):
 
 
 def predict_salary(salary_from, salary_to):
-    # if salary_to is None or salary_to == 0:
     if salary_to is None:
         return None if salary_from * 1.2 == 0 else salary_from * 1.2
 
-    # if salary_from is None or salary_from == 0:
     if salary_from is None:
         return None if salary_to * 0.8 == 0 else salary_to * 0.8
 
@@ -58,7 +56,51 @@ def predict_salary(salary_from, salary_to):
     return None if predicted_salary == 0 else predicted_salary
 
 
-def get_proglang_stat_hh(proglang, proglang_stat):
+def get_proglang_stat_sj(proglang):
+    print(f'Подсчёт количества вакансий для "{proglang}"...')
+    params = {
+        'town': 'Москва',
+        'catalogues': '33',
+        'keyword': proglang,
+        'page': '0',
+        'count': 100
+    }
+    response = requests.get(
+        url=SJ_BASE_URL + 'vacancies/',
+        headers=SJ_HEADER,
+        params=params
+    )
+    response.raise_for_status()
+    vac_total = response.json()['total']
+    vac_on_page = 20
+    pages = math.ceil(vac_total / vac_on_page)
+    vacs_processed, salary_sum, average_salary, page = 0, 0, 0, 0
+
+    while page < pages:
+        resp = requests.get(
+            url=SJ_BASE_URL + 'vacancies/',
+            headers=SJ_HEADER,
+            params=params
+        )
+        resp.raise_for_status()
+        page += 1
+        vacancies = resp.json()
+        for vac_n, vac in enumerate(vacancies['objects']):
+            if vac['currency'] == 'rub':
+                predicted_salary = predict_salary_sj(vac)
+                if predicted_salary:
+                    salary_sum += predicted_salary
+                    vacs_processed += 1
+        params['page'] = page
+
+    return {
+        'vacancies_found': vac_total,
+        'vacancies_processed': vacs_processed,
+        'average_salary': int(salary_sum / vacs_processed)
+    }
+
+
+def get_proglang_stat_hh(proglang):
     print(f'Подсчёт количества вакансий для "{proglang}"...')
     params = {
         'text': proglang,
@@ -66,12 +108,6 @@ def get_proglang_stat_hh(proglang, proglang_stat):
         'page': '0',
     }
     vac_total, vacs_processed, salary_sum, average_salary, page = 0, 0, 0, 0, 0
-    if proglang in proglang_stat:
-        proglang_stat_values = proglang_stat[proglang]
-        vac_total += proglang_stat_values['vacancies_found']
-        vacs_processed += proglang_stat_values['vacancies_processed']
-        average_salary += proglang_stat_values['average_salary']
-        salary_sum = average_salary * vacs_processed
 
     while True:
         try:
@@ -94,84 +130,26 @@ def get_proglang_stat_hh(proglang, proglang_stat):
         page += 1
         params['page'] = page
 
-    proglang_stat_values = {
+    return {
         'vacancies_found': vacancies['found'],
         'vacancies_processed': vacs_processed,
         'average_salary': int(salary_sum / vacs_processed)
     }
-    proglang_stat[proglang] = proglang_stat_values
-
-    return proglang_stat
-
-
-def get_proglang_stat_sj(proglang, proglang_stat):
-    print(f'Подсчёт количества вакансий для "{proglang}"...')
-    params = {
-        'town': 'Москва',
-        'catalogues': '33',
-        'keyword': proglang,
-        'page': '0',
-        'count': 100
-    }
-    response = requests.get(
-        url=SJ_BASE_URL + 'vacancies/',
-        headers=SJ_HEADER,
-        params=params
-    )
-    response.raise_for_status()
-    vac_total = response.json()['total']
-    vac_on_page = 20
-    pages = math.ceil(vac_total / vac_on_page)
-    vacs_processed, salary_sum, average_salary, page = 0, 0, 0, 0
-    if proglang in proglang_stat:
-        proglang_stat_values = proglang_stat[proglang]
-        vac_total += proglang_stat_values['vacancies_found']
-        vacs_processed += proglang_stat_values['vacancies_processed']
-        average_salary += proglang_stat_values['average_salary']
-        salary_sum = average_salary * vacs_processed
-
-    while page < pages:
-        resp = requests.get(
-            url=SJ_BASE_URL + 'vacancies/',
-            headers=SJ_HEADER,
-            params=params
-        )
-        resp.raise_for_status()
-        page += 1
-        vacancies = resp.json()
-        for vac_n, vac in enumerate(vacancies['objects']):
-            if vac['currency'] == 'rub':
-                predicted_salary = predict_salary_sj(vac)
-                if predicted_salary:
-                    salary_sum += predicted_salary
-                    vacs_processed += 1
-        params['page'] = page
-
-    proglang_stat_values = {
-        'vacancies_found': vac_total,
-        'vacancies_processed': vacs_processed,
-        'average_salary': int(salary_sum / vacs_processed)
-    }
-    proglang_stat[proglang] = proglang_stat_values
-    return proglang_stat
 
 
 def get_stat(resource, languages):
+    print(f'Сбор статистики для {resource}.')
     if resource not in resources:
         raise KeyError(resource)
 
-    langs = {}
-    for lang_n, lang in enumerate(languages):
-        langs[lang] = 0
-
-    stat = {}
-    print(resource)
+    lang_stat = {}
+    langs = {lang: 0 for lang in languages}
     for lang_n, lang in enumerate(langs):
         if resource == 'HeadHunter.ru':
-            stat = get_proglang_stat_hh(lang, stat)
+            lang_stat[lang] = get_proglang_stat_hh(lang)
         if resource == 'SuperJob.ru':
-            stat = get_proglang_stat_sj(lang, stat)
-    return stat
+            lang_stat[lang] = get_proglang_stat_sj(lang)
+    return lang_stat
 
 
 def convert_data_for_tables(data_array):
@@ -205,13 +183,13 @@ if __name__ == '__main__':
     prog_langs = [
         'Python',
         'Java',
-        'JavaScript',
-        'C++',
-        'C',
-        'Delphi',
-        'GO',
-        'PHP',
-        'Ruby',
+        # 'JavaScript',
+        # 'C++',
+        # 'C',
+        # 'Delphi',
+        # 'GO',
+        # 'PHP',
+        # 'Ruby',
     ]
 
     try:
