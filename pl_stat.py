@@ -110,12 +110,11 @@ def get_proglang_stat_hh(proglang):
             break
 
         for vac in vacancies['items']:
-            if vac['salary']:
-                if vac['salary']['currency'] == 'RUR':
-                    predicted_salary = predict_salary_hh(vac)
-                    if predicted_salary:
-                        salary_sum += predicted_salary
-                        vacs_processed += 1
+            if vac['salary'] and vac['salary']['currency'] == 'RUR':
+                predicted_salary = predict_salary_hh(vac)
+                if predicted_salary:
+                    salary_sum += predicted_salary
+                    vacs_processed += 1
         page += 1
         params['page'] = page
 
@@ -194,8 +193,8 @@ if __name__ == '__main__':
     logger.addHandler(log_handler)
 
     try:
-        # hh_stat = get_stat('HeadHunter.ru', prog_langs)
-        # print_table(hh_stat, 'HeadHunter. Москва', col_aligns)
+        hh_stat = get_stat('HeadHunter.ru', prog_langs)
+        print_table(hh_stat, 'HeadHunter. Москва', col_aligns)
 
         sj_stat = get_stat('SuperJob.ru', prog_langs)
         print_table(sj_stat, 'SuperJob. Москва', col_aligns)
