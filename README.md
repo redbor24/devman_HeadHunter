@@ -19,6 +19,7 @@
 ```
 ### Зависимости
 ```
+python-decouple==3.5
 requests==2.26.0
 terminaltables==3.1.0
 ```
@@ -28,7 +29,7 @@ terminaltables==3.1.0
 ### Список языков программирования для сбора статистики
 Модуль `config.py` переменная `PROG_LANGS`
 ```
-PROG_LANGS = [
+prog_langs = [
     'Python',
     'Java',
     'JavaScript',
