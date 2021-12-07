@@ -42,13 +42,13 @@ def predict_salary_sj(vacancy):
 
 def predict_salary(salary_from, salary_to):
     if salary_to is None:
-        return None if salary_from * 1.2 == 0 else salary_from * 1.2
+        return salary_from * 1.2 if salary_from * 1.2 else None
 
     if salary_from is None:
-        return None if salary_to * 0.8 == 0 else salary_to * 0.8
+        return salary_to * 0.8 if salary_to * 0.8 else None
 
     predicted_salary = (salary_from + salary_to) / 2
-    return None if predicted_salary == 0 else predicted_salary
+    return predicted_salary if predicted_salary else None
 
 
 def get_proglang_stat_sj(proglang):
