@@ -63,35 +63,30 @@ def get_proglang_stat_sj(proglang):
         'town': 'Москва',
         'catalogues': '33',
         'keyword': proglang,
-        'page': '0',
-        'count': 100
     }
-    response = requests.get(
-        url=SJ_BASE_URL + 'vacancies/',
-        headers=SJ_HEADER,
-        params=params
-    )
-    response.raise_for_status()
-    vac_total = response.json()['total']
     vac_on_page = 20
-    pages = math.ceil(vac_total / vac_on_page)
-    vacs_processed, salary_sum, average_salary, page = 0, 0, 0, 0
+    pages = 1
+    vacs_processed, salary_sum, average_salary, page, vac_total = 0, 0, 0, 0, 0
 
     while page < pages:
-        resp = requests.get(
+        response = requests.get(
             url=SJ_BASE_URL + 'vacancies/',
             headers=SJ_HEADER,
             params=params
         )
-        resp.raise_for_status()
-        page += 1
-        vacancies = resp.json()
+        response.raise_for_status()
+        if page == 0:
+            vac_total = response.json()['total']
+            pages = math.ceil(vac_total / vac_on_page)
+
+        vacancies = response.json()
         for vac_n, vac in enumerate(vacancies['objects']):
             if vac['currency'] == 'rub':
                 predicted_salary = predict_salary_sj(vac)
                 if predicted_salary:
                     salary_sum += predicted_salary
                     vacs_processed += 1
+        page += 1
         params['page'] = page
 
     return {
@@ -201,10 +196,10 @@ if __name__ == '__main__':
     logger.addHandler(log_handler)
 
     try:
-        # hh_stat = get_stat('HeadHunter.ru', prog_langs)
+        hh_stat = get_stat('HeadHunter.ru', prog_langs)
         sj_stat = get_stat('SuperJob.ru', prog_langs)
 
-        # print_table(hh_stat, 'HeadHunter. Москва', col_aligns)
+        print_table(hh_stat, 'HeadHunter. Москва', col_aligns)
         print_table(sj_stat, 'SuperJob. Москва', col_aligns)
     except KeyError as e:
         print(f'Ошибка! Ресурс {e} не найден')
