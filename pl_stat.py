@@ -20,12 +20,6 @@ col_aligns = {
     3: 'center',
 }
 
-lang_details = {
-    'vacancies_found': 0,
-    'vacancies_processed': 0,
-    'average_salary': 0,
-}
-
 
 def predict_salary_hh(vacancy):
     vac_sal = vacancy['salary']
@@ -154,13 +148,18 @@ def convert_data_for_tables(data_array):
         'Вакансий обработано',
         'Средняя зарплата'
     ]]
+
     for el in data_array.items():
+        lang = el[0]
+        lang_details = el[1]
+
         result.append([
-            el[0],
-            el[1]['vacancies_found'],
-            el[1]['vacancies_processed'],
-            el[1]['average_salary']]
+            lang,
+            lang_details['vacancies_found'],
+            lang_details['vacancies_processed'],
+            lang_details['average_salary']]
         )
+
     return result
 
 
@@ -195,8 +194,8 @@ if __name__ == '__main__':
     logger.addHandler(log_handler)
 
     try:
-        hh_stat = get_stat('HeadHunter.ru', prog_langs)
-        print_table(hh_stat, 'HeadHunter. Москва', col_aligns)
+        # hh_stat = get_stat('HeadHunter.ru', prog_langs)
+        # print_table(hh_stat, 'HeadHunter. Москва', col_aligns)
 
         sj_stat = get_stat('SuperJob.ru', prog_langs)
         print_table(sj_stat, 'SuperJob. Москва', col_aligns)
