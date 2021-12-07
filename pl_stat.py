@@ -176,13 +176,13 @@ if __name__ == '__main__':
     prog_langs = [
         'Python',
         'Java',
-        # 'JavaScript',
-        # 'C++',
-        # 'C',
-        # 'Delphi',
-        # 'GO',
-        # 'PHP',
-        # 'Ruby',
+        'JavaScript',
+        'C++',
+        'C',
+        'Delphi',
+        'GO',
+        'PHP',
+        'Ruby',
     ]
 
     logger = logging.getLogger('pl_stat')
