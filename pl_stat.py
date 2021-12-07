@@ -64,9 +64,8 @@ def get_proglang_stat_sj(proglang):
         'catalogues': '33',
         'keyword': proglang,
     }
-    vac_on_page = 20
-    pages = 1
-    vacs_processed, salary_sum, average_salary, page, vac_total = 0, 0, 0, 0, 0
+    page, pages, vac_on_page = 0, 1, 100
+    vacs_processed, salary_sum = 0, 0
 
     while page < pages:
         response = requests.get(
@@ -80,7 +79,7 @@ def get_proglang_stat_sj(proglang):
             pages = math.ceil(vac_total / vac_on_page)
 
         vacancies = response.json()
-        for vac_n, vac in enumerate(vacancies['objects']):
+        for vac in vacancies['objects']:
             if vac['currency'] == 'rub':
                 predicted_salary = predict_salary_sj(vac)
                 if predicted_salary:
@@ -103,7 +102,7 @@ def get_proglang_stat_hh(proglang):
         'per_page': 100,
         'page': '0',
     }
-    vac_total, vacs_processed, salary_sum, average_salary, page = 0, 0, 0, 0, 0
+    vacs_processed, salary_sum, page = 0, 0, 0
 
     while True:
         try:
@@ -116,7 +115,7 @@ def get_proglang_stat_hh(proglang):
         except exceptions.HTTPError:
             break
 
-        for vac_n, vac in enumerate(vacancies['items']):
+        for vac in vacancies['items']:
             if vac['salary']:
                 if vac['salary']['currency'] == 'RUR':
                     predicted_salary = predict_salary_hh(vac)
@@ -197,9 +196,9 @@ if __name__ == '__main__':
 
     try:
         hh_stat = get_stat('HeadHunter.ru', prog_langs)
-        sj_stat = get_stat('SuperJob.ru', prog_langs)
-
         print_table(hh_stat, 'HeadHunter. Москва', col_aligns)
+
+        sj_stat = get_stat('SuperJob.ru', prog_langs)
         print_table(sj_stat, 'SuperJob. Москва', col_aligns)
     except KeyError as e:
         print(f'Ошибка! Ресурс {e} не найден')
