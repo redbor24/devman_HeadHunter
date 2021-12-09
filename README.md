@@ -1,5 +1,5 @@
 # Учебный проект devman_HeadHunter
-Получает с ресурсов [HeadHunter.ru](HeadHunter.ru) и [SuperJob.ru](SuperJob.ru) 
+Получает с ресурсов [HeadHunter.ru](http://HeadHunter.ru) и [SuperJob.ru](http://SuperJob.ru) 
 статистику по вакансиям
 по заданным языкам программирования и выводит в виде таблицы:
 ```
@@ -24,7 +24,7 @@ requests==2.26.0
 terminaltables==3.1.0
 ```
 ### Переменные окружения
- - `SJ_SECRET_KEY=<value>` - токен для работы с [SuperJob.ru](SuperJob.ru) 
+ - `SJ_SECRET_KEY=<value>` - токен для работы с [SuperJob.ru](http://SuperJob.ru) 
 ([получение токена](https://api.superjob.ru/register/))
 ### Список языков программирования для сбора статистики
 Модуль `config.py` переменная `PROG_LANGS`
