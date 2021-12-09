@@ -83,6 +83,7 @@ def get_proglang_stat_sj(proglang):
         page += 1
         params['page'] = page
 
+    vacs_processed = 1 if not vacs_processed else vacs_processed
     return {
         'vacancies_found': vac_total,
         'vacancies_processed': vacs_processed,
@@ -119,6 +120,7 @@ def get_proglang_stat_hh(proglang):
         page += 1
         params['page'] = page
 
+    vacs_processed = 1 if not vacs_processed else vacs_processed
     return {
         'vacancies_found': vacancies['found'],
         'vacancies_processed': vacs_processed,
