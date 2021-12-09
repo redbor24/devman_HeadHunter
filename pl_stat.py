@@ -64,7 +64,7 @@ def get_proglang_stat_sj(proglang):
 
     while page < pages:
         response = requests.get(
-            url=SJ_BASE_URL + 'vacancies/',
+            url=f'{SJ_BASE_URL}vacancies/',
             headers=SJ_HEADER,
             params=params
         )
@@ -102,7 +102,7 @@ def get_proglang_stat_hh(proglang):
     while True:
         try:
             response = requests.get(
-                HH_BASE_URL + r'vacancies/',
+                f'{HH_BASE_URL}vacancies/',
                 headers=HH_HEADER,
                 params=params)
             response.raise_for_status()
