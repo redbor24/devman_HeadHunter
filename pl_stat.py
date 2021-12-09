@@ -151,10 +151,7 @@ def prepare_terminal_table(data_array):
         'Средняя зарплата'
     ]]
 
-    for el in data_array.items():
-        lang = el[0]
-        lang_details = el[1]
-
+    for lang, lang_details in data_array.items():
         result.append([
             lang,
             lang_details['vacancies_found'],
@@ -196,8 +193,8 @@ if __name__ == '__main__':
     logger.addHandler(log_handler)
 
     try:
-        hh_stat = get_stat('HeadHunter.ru', prog_langs)
-        print_table(hh_stat, 'HeadHunter. Москва', col_aligns)
+        # hh_stat = get_stat('HeadHunter.ru', prog_langs)
+        # print_table(hh_stat, 'HeadHunter. Москва', col_aligns)
 
         sj_stat = get_stat('SuperJob.ru', prog_langs)
         print_table(sj_stat, 'SuperJob. Москва', col_aligns)
