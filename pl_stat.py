@@ -143,7 +143,7 @@ def get_stat(resource, languages):
     return lang_stat
 
 
-def prepare_table(data_array):
+def prepare_terminal_table(data_array):
     result = [[
         'Язык программирования',
         'Вакансий найдено',
@@ -168,7 +168,7 @@ def prepare_table(data_array):
 def print_table(stat, table_caption, column_aligns):
     if not stat:
         return
-    table_instance = SingleTable(prepare_table(stat), table_caption)
+    table_instance = SingleTable(prepare_terminal_table(stat), table_caption)
     for item in column_aligns.items():
         table_instance.justify_columns[item[0]] = item[1]
     print(table_instance.table)
