@@ -24,27 +24,27 @@ col_aligns = {
 def predict_salary_hh(vacancy):
     vac_sal = vacancy['salary']
 
-    if vac_sal is None:
+    if not vac_sal:
         return None
 
-    if vac_sal['currency'] is None:
+    if not vac_sal['currency']:
         return None
 
     return predict_salary(vac_sal['from'], vac_sal['to'])
 
 
 def predict_salary_sj(vacancy):
-    if vacancy['currency'] is None:
+    if not vacancy['currency']:
         return None
 
     return predict_salary(vacancy['payment_from'], vacancy['payment_to'])
 
 
 def predict_salary(salary_from, salary_to):
-    if salary_to is None:
+    if not salary_to:
         return salary_from * 1.2 if salary_from * 1.2 else None
 
-    if salary_from is None:
+    if not salary_from:
         return salary_to * 0.8 if salary_to * 0.8 else None
 
     predicted_salary = (salary_from + salary_to) / 2
