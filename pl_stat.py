@@ -53,9 +53,10 @@ def predict_salary(salary_from, salary_to):
 
 def get_proglang_stat_sj(proglang):
     logger.info(f'Подсчёт количества вакансий для "{proglang}"...')
+    sj_ITcatalog_index = 33
     params = {
         'town': 'Москва',
-        'catalogues': '33',
+        'catalogues': sj_ITcatalog_index,
         'keyword': proglang,
     }
     page, pages, vac_on_page = 0, 1, 100
