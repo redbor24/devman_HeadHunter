@@ -69,11 +69,11 @@ def get_proglang_stat_sj(proglang):
             params=params
         )
         response.raise_for_status()
+        vacancies = response.json()
         if page == 0:
-            vac_total = response.json()['total']
+            vac_total = vacancies['total']
             pages = math.ceil(vac_total / vac_on_page)
 
-        vacancies = response.json()
         for vac in vacancies['objects']:
             if vac['currency'] == 'rub':
                 predicted_salary = predict_salary_sj(vac)
@@ -177,13 +177,13 @@ if __name__ == '__main__':
     prog_langs = [
         'Python',
         'Java',
-        'JavaScript',
-        'C++',
-        'C',
-        'Delphi',
-        'GO',
-        'PHP',
-        'Ruby',
+        # 'JavaScript',
+        # 'C++',
+        # 'C',
+        # 'Delphi',
+        # 'GO',
+        # 'PHP',
+        # 'Ruby',
     ]
 
     logger = logging.getLogger('pl_stat')
