@@ -1,3 +1,4 @@
+import itertools
 import logging
 import math
 
@@ -41,12 +42,12 @@ def predict_salary(salary_from, salary_to):
     if not salary_to and salary_from:
         sal_from = salary_from * 1.2
     else:
-        return None
+        sal_from = 0
 
     if not salary_from and salary_to:
         sal_to = salary_to * 0.8
     else:
-        return None
+        sal_to = 0
 
     predicted_salary = (sal_from + sal_to) / 2
     if predicted_salary:
@@ -57,16 +58,34 @@ def predict_salary(salary_from, salary_to):
 
 def get_proglang_stat_sj(proglang):
     logger.info(f'Подсчёт количества вакансий для "{proglang}"...')
-    sj_ITcatalog_index = 33
+    sj_catalog_index = 33  # индекс каталога для поиска
     params = {
         'town': 'Москва',
-        'catalogues': sj_ITcatalog_index,
+        'catalogues': sj_catalog_index,
         'keyword': proglang,
     }
-    page, pages, vac_on_page = 0, 1, 100
-    vacs_processed, salary_sum = 0, 0
+    vac_on_page, vacs_processed, salary_sum = 100, 0, 0
 
-    while page < pages:
+    response = requests.get(
+        url=f'{SJ_BASE_URL}vacancies/',
+        headers=SJ_HEADER,
+        params=params
+    )
+    response.raise_for_status()
+    vacancies = response.json()
+
+    vac_total = vacancies['total']
+    pages = math.ceil(vac_total / vac_on_page)
+
+    for page in itertools.count(start=1):
+        for vac in vacancies['objects']:
+            if vac['currency'] == 'rub':
+                predicted_salary = predict_salary_sj(vac)
+                if predicted_salary:
+                    salary_sum += predicted_salary
+                    vacs_processed += 1
+
+        params['page'] = page
         response = requests.get(
             url=f'{SJ_BASE_URL}vacancies/',
             headers=SJ_HEADER,
@@ -74,19 +93,9 @@ def get_proglang_stat_sj(proglang):
         )
         response.raise_for_status()
         vacancies = response.json()
-        logger.info(vacancies)
-        if page == 0:
-            vac_total = vacancies['total']
-            pages = math.ceil(vac_total / vac_on_page)
 
-        for vac in vacancies['objects']:
-            if vac['currency'] == 'rub':
-                predicted_salary = predict_salary_sj(vac)
-                if predicted_salary:
-                    salary_sum += predicted_salary
-                    vacs_processed += 1
-        page += 1
-        params['page'] = page
+        if page == pages:
+            break
 
     vacs_processed = 1 if not vacs_processed else vacs_processed
     return {
@@ -103,27 +112,35 @@ def get_proglang_stat_hh(proglang):
         'per_page': 100,
         'page': '0',
     }
-    vacs_processed, salary_sum, page = 0, 0, 0
 
-    while True:
-        try:
-            response = requests.get(
-                f'{HH_BASE_URL}vacancies/',
-                headers=HH_HEADER,
-                params=params)
-            response.raise_for_status()
-            vacancies = response.json()
-        except exceptions.HTTPError:
-            break
+    response = requests.get(
+        f'{HH_BASE_URL}vacancies/',
+        headers=HH_HEADER,
+        params=params)
+    response.raise_for_status()
+    vacancies = response.json()
+    pages = vacancies['pages']
+    last_page = pages - 1
+    vacs_processed, salary_sum = 0, 0
 
+    for page in itertools.count(start=1):
         for vac in vacancies['items']:
             if vac['salary'] and vac['salary']['currency'] == 'RUR':
                 predicted_salary = predict_salary_hh(vac)
                 if predicted_salary:
                     salary_sum += predicted_salary
                     vacs_processed += 1
-        page += 1
         params['page'] = page
+
+        response = requests.get(
+            f'{HH_BASE_URL}vacancies/',
+            headers=HH_HEADER,
+            params=params)
+        response.raise_for_status()
+        vacancies = response.json()
+
+        if page == last_page:
+            break
 
     vacs_processed = 1 if not vacs_processed else vacs_processed
     return {
@@ -180,7 +197,7 @@ def print_table(stat, table_caption, column_aligns):
 if __name__ == '__main__':
     prog_langs = [
         'Python',
-        # 'Java',
+        'Java',
         # 'JavaScript',
         # 'C++',
         # 'C',
@@ -191,15 +208,15 @@ if __name__ == '__main__':
     ]
 
     logger = logging.getLogger('pl_stat')
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
     log_handler = logging.FileHandler('pl_stat.log', encoding='utf-8')
     log_foramatter = logging.Formatter('%(asctime)s - %(message)s')
     log_handler.setFormatter(log_foramatter)
     logger.addHandler(log_handler)
 
     try:
-        # hh_stat = get_stat('HeadHunter.ru', prog_langs)
-        # print_table(hh_stat, 'HeadHunter. Москва', col_aligns)
+        hh_stat = get_stat('HeadHunter.ru', prog_langs)
+        print_table(hh_stat, 'HeadHunter. Москва', col_aligns)
 
         sj_stat = get_stat('SuperJob.ru', prog_langs)
         print_table(sj_stat, 'SuperJob. Москва', col_aligns)
