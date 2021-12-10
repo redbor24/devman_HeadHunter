@@ -24,10 +24,7 @@ col_aligns = {
 def predict_salary_hh(vacancy):
     vac_sal = vacancy['salary']
 
-    if not vac_sal:
-        return None
-
-    if not vac_sal['currency']:
+    if not vac_sal or not vac_sal['currency']:
         return None
 
     return predict_salary(vac_sal['from'], vac_sal['to'])
@@ -41,14 +38,21 @@ def predict_salary_sj(vacancy):
 
 
 def predict_salary(salary_from, salary_to):
-    if not salary_to:
-        return salary_from * 1.2 if salary_from * 1.2 else None
+    if not salary_to and salary_from:
+        sal_from = salary_from * 1.2
+    else:
+        return None
 
-    if not salary_from:
-        return salary_to * 0.8 if salary_to * 0.8 else None
+    if not salary_from and salary_to:
+        sal_to = salary_to * 0.8
+    else:
+        return None
 
-    predicted_salary = (salary_from + salary_to) / 2
-    return predicted_salary if predicted_salary else None
+    predicted_salary = (sal_from + sal_to) / 2
+    if predicted_salary:
+        return predicted_salary
+    else:
+        return None
 
 
 def get_proglang_stat_sj(proglang):
@@ -70,6 +74,7 @@ def get_proglang_stat_sj(proglang):
         )
         response.raise_for_status()
         vacancies = response.json()
+        logger.info(vacancies)
         if page == 0:
             vac_total = vacancies['total']
             pages = math.ceil(vac_total / vac_on_page)
@@ -175,7 +180,7 @@ def print_table(stat, table_caption, column_aligns):
 if __name__ == '__main__':
     prog_langs = [
         'Python',
-        'Java',
+        # 'Java',
         # 'JavaScript',
         # 'C++',
         # 'C',
@@ -187,7 +192,7 @@ if __name__ == '__main__':
 
     logger = logging.getLogger('pl_stat')
     logger.setLevel(logging.INFO)
-    log_handler = logging.FileHandler('pl_stat.log')
+    log_handler = logging.FileHandler('pl_stat.log', encoding='utf-8')
     log_foramatter = logging.Formatter('%(asctime)s - %(message)s')
     log_handler.setFormatter(log_foramatter)
     logger.addHandler(log_handler)
