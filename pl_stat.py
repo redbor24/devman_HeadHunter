@@ -79,7 +79,7 @@ def get_proglang_stat_sj(languages):
 
             params['page'] = page
             response = requests.get(
-                url=f'{SJ_BASE_URL}vacancies/',
+                url='https://api.superjob.ru/2.0/vacancies/',
                 headers=SJ_HEADER,
                 params=params
             )
@@ -174,8 +174,8 @@ def print_table(stat, table_caption, column_aligns):
     if not stat:
         return
     table_instance = SingleTable(prepare_terminal_table(stat), table_caption)
-    for item in column_aligns.items():
-        table_instance.justify_columns[item[0]] = item[1]
+    for item_n, item in enumerate(column_aligns.items()):
+        table_instance.justify_columns[item_n] = item
     logger.info(f'\n{table_instance.table}')
     print(table_instance.table)
     print()
