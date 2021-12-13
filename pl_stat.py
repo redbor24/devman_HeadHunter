@@ -133,7 +133,7 @@ def get_proglang_stat_hh(languages):
             params['page'] = page
 
             response = requests.get(
-                f'{HH_BASE_URL}vacancies/',
+                'https://api.hh.ru/vacancies/',
                 headers=HH_HEADER,
                 params=params)
             response.raise_for_status()
@@ -151,7 +151,7 @@ def get_proglang_stat_hh(languages):
     return lang_stat
 
 
-def print_table(stat, table_caption, column_aligns):
+def get_printable_table(stat, table_caption, column_aligns):
     if not stat:
         return
 
@@ -174,8 +174,7 @@ def print_table(stat, table_caption, column_aligns):
     for item_n, item in enumerate(column_aligns.items()):
         table_instance.justify_columns[item_n] = item
     logger.info(f'\n{table_instance.table}')
-    print(table_instance.table)
-    print()
+    return table_instance.table
 
 
 if __name__ == '__main__':
@@ -190,13 +189,13 @@ if __name__ == '__main__':
     prog_langs = [
         'Python',
         'Java',
-        'JavaScript',
-        'C++',
-        'C',
-        'Delphi',
-        'GO',
-        'PHP',
-        'Ruby',
+        # 'JavaScript',
+        # 'C++',
+        # 'C',
+        # 'Delphi',
+        # 'GO',
+        # 'PHP',
+        # 'Ruby',
     ]
 
     logger = logging.getLogger('pl_stat')
@@ -208,7 +207,7 @@ if __name__ == '__main__':
     logger.addHandler(log_handler)
 
     hh_stat = get_proglang_stat_hh(prog_langs)
-    print_table(hh_stat, 'HeadHunter. Москва', col_aligns)
+    print(get_printable_table(hh_stat, 'HeadHunter. Москва', col_aligns))
 
     sj_stat = get_proglang_stat_sj(prog_langs)
-    print_table(sj_stat, 'SuperJob. Москва', col_aligns)
+    print(get_printable_table(sj_stat, 'SuperJob. Москва', col_aligns))
