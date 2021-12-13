@@ -151,29 +151,26 @@ def get_proglang_stat_hh(languages):
     return lang_stat
 
 
-def prepare_terminal_table(data_array):
-    result = [[
+def print_table(stat, table_caption, column_aligns):
+    if not stat:
+        return
+
+    terminal_table = [[
         'Язык программирования',
         'Вакансий найдено',
         'Вакансий обработано',
         'Средняя зарплата'
     ]]
 
-    for lang, lang_details in data_array.items():
-        result.append([
+    for lang, lang_details in stat.items():
+        terminal_table.append([
             lang,
             lang_details['vacancies_found'],
             lang_details['vacancies_processed'],
             lang_details['average_salary']]
         )
 
-    return result
-
-
-def print_table(stat, table_caption, column_aligns):
-    if not stat:
-        return
-    table_instance = SingleTable(prepare_terminal_table(stat), table_caption)
+    table_instance = SingleTable(terminal_table, table_caption)
     for item_n, item in enumerate(column_aligns.items()):
         table_instance.justify_columns[item_n] = item
     logger.info(f'\n{table_instance.table}')
