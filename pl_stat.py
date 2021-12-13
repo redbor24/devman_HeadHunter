@@ -3,23 +3,8 @@ import logging
 import math
 
 import requests
-from requests import exceptions
+from decouple import config
 from terminaltables import SingleTable
-
-from config import (
-    HH_BASE_URL,
-    HH_HEADER,
-    SJ_BASE_URL,
-    SJ_HEADER,
-)
-
-resources = ['HeadHunter.ru', 'SuperJob.ru']
-
-col_aligns = {
-    1: 'center',
-    2: 'center',
-    3: 'center',
-}
 
 
 def predict_salary_hh(vacancy):
@@ -57,6 +42,10 @@ def predict_salary(salary_from, salary_to):
 
 
 def get_proglang_stat_sj(languages):
+    SJ_HEADER = {
+        'X-Api-App-Id': SJ_SECRET_KEY,
+    }
+
     logger.info('Сбор статистики для SuperJob.ru')
     lang_stat = {}
     sj_catalog_index = 33  # индекс каталога для поиска
@@ -70,7 +59,7 @@ def get_proglang_stat_sj(languages):
         vac_on_page, vacs_processed, salary_sum = 100, 0, 0
 
         response = requests.get(
-            url=f'{SJ_BASE_URL}vacancies/',
+            url='https://api.superjob.ru/2.0/vacancies/',
             headers=SJ_HEADER,
             params=params
         )
@@ -110,6 +99,10 @@ def get_proglang_stat_sj(languages):
 
 
 def get_proglang_stat_hh(languages):
+    HH_HEADER = {
+        'content-type': 'application/json; charset=UTF-8',
+    }
+
     logger.info('Сбор статистики для HeadHunter.ru')
     lang_stat = {}
     for lang_n, language in enumerate(languages):
@@ -121,7 +114,7 @@ def get_proglang_stat_hh(languages):
         }
 
         response = requests.get(
-            f'{HH_BASE_URL}vacancies/',
+            'https://api.hh.ru/vacancies/',
             headers=HH_HEADER,
             params=params)
         response.raise_for_status()
@@ -189,6 +182,14 @@ def print_table(stat, table_caption, column_aligns):
 
 
 if __name__ == '__main__':
+    SJ_SECRET_KEY = config('SJ_SECRET_KEY', '')
+
+    col_aligns = {
+        1: 'center',
+        2: 'center',
+        3: 'center',
+    }
+
     prog_langs = [
         'Python',
         'Java',
@@ -204,15 +205,13 @@ if __name__ == '__main__':
     logger = logging.getLogger('pl_stat')
     logger.setLevel(logging.DEBUG)
     log_handler = logging.FileHandler('pl_stat.log', encoding='utf-8')
-    log_foramatter = logging.Formatter('%(asctime)s - %(message)s')
-    log_handler.setFormatter(log_foramatter)
+    log_handler.setFormatter(
+        logging.Formatter('%(asctime)s - %(message)s')
+    )
     logger.addHandler(log_handler)
 
-    try:
-        hh_stat = get_proglang_stat_hh(prog_langs)
-        print_table(hh_stat, 'HeadHunter. Москва', col_aligns)
+    hh_stat = get_proglang_stat_hh(prog_langs)
+    print_table(hh_stat, 'HeadHunter. Москва', col_aligns)
 
-        sj_stat = get_proglang_stat_sj(prog_langs)
-        print_table(sj_stat, 'SuperJob. Москва', col_aligns)
-    except KeyError as e:
-        print(f'Ошибка! Ресурс {e} не найден')
+    sj_stat = get_proglang_stat_sj(prog_langs)
+    print_table(sj_stat, 'SuperJob. Москва', col_aligns)
