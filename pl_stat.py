@@ -48,7 +48,7 @@ def get_proglang_stat_sj(languages):
 
     logger.info('Сбор статистики для SuperJob.ru')
     lang_stat = {}
-    sj_catalog_index = 33  # индекс каталога для поиска
+    sj_catalog_index = 33
     for lang_n, language in enumerate(languages):
         logger.info(f' Подсчёт количества вакансий для "{language}"...')
         params = {
