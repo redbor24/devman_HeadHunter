@@ -42,34 +42,37 @@ def predict_salary(salary_from, salary_to):
 
 
 def get_proglang_stat_sj(languages):
-    SJ_HEADER = {
+    sj_header = {
         'X-Api-App-Id': SJ_SECRET_KEY,
+    }
+    sj_catalog_index = 33
+    sj_vacs_per_page = 100
+    params = {
+        'town': 'Москва',
+        'catalogues': sj_catalog_index,
+        'count': sj_vacs_per_page,
     }
 
     logger.info('Сбор статистики для SuperJob.ru')
     lang_stat = {}
-    sj_catalog_index = 33
-    for lang_n, language in enumerate(languages):
+    for language in languages:
         logger.info(f' Подсчёт количества вакансий для "{language}"...')
-        params = {
-            'town': 'Москва',
-            'catalogues': sj_catalog_index,
-            'keyword': language,
-        }
-        vac_on_page, vacs_processed, salary_sum = 100, 0, 0
+        vacs_found, vacs_processed, salary_sum = 0, 0, 0
 
-        response = requests.get(
-            url='https://api.superjob.ru/2.0/vacancies/',
-            headers=SJ_HEADER,
-            params=params
-        )
-        response.raise_for_status()
-        vacancies = response.json()
+        params['keyword'] = language
+        for page in itertools.count(start=0):
+            params['page'] = page
+            response = requests.get(
+                url='https://api.superjob.ru/2.0/vacancies/',
+                headers=sj_header,
+                params=params
+            )
+            response.raise_for_status()
+            vacancies = response.json()
 
-        vac_total = vacancies['total']
-        pages = math.ceil(vac_total / vac_on_page)
+            if page == 0:
+                vacs_found = vacancies['total']
 
-        for page in itertools.count(start=1):
             for vac in vacancies['objects']:
                 if vac['currency'] == 'rub':
                     predicted_salary = predict_salary_sj(vac)
@@ -77,84 +80,73 @@ def get_proglang_stat_sj(languages):
                         salary_sum += predicted_salary
                         vacs_processed += 1
 
-            params['page'] = page
-            response = requests.get(
-                url='https://api.superjob.ru/2.0/vacancies/',
-                headers=SJ_HEADER,
-                params=params
-            )
-            response.raise_for_status()
-            vacancies = response.json()
-
-            if page == pages:
+            if not vacancies['more']:
                 break
 
-        vacs_processed = 1 if not vacs_processed else vacs_processed
+        average_salary = int(
+            salary_sum / 1 if not vacs_processed else vacs_processed
+        )
         lang_stat[language] = {
-            'vacancies_found': vac_total,
+            'vacancies_found': vacs_found,
             'vacancies_processed': vacs_processed,
-            'average_salary': int(salary_sum / vacs_processed)
+            'average_salary': average_salary
         }
     return lang_stat
 
 
 def get_proglang_stat_hh(languages):
-    HH_HEADER = {
+    hh_header = {
         'content-type': 'application/json; charset=UTF-8',
+    }
+    params = {
+        'per_page': 100,
     }
 
     logger.info('Сбор статистики для HeadHunter.ru')
     lang_stat = {}
-    for lang_n, language in enumerate(languages):
-        logger.info(f' Подсчёт количества вакансий для "{language}"...')
-        params = {
-            'text': language,
-            'per_page': 100,
-            'page': '0',
-        }
+    for language in languages:
+        params['text'] = language
 
-        response = requests.get(
-            'https://api.hh.ru/vacancies/',
-            headers=HH_HEADER,
-            params=params)
-        response.raise_for_status()
-        vacancies = response.json()
-        pages = vacancies['pages']
-        last_page = pages - 1
-        vacs_processed, salary_sum = 0, 0
+        logger.info(f' Подсчёт количества вакансий для "{language}"...')
+
+        last_page = 0
+        vacs_found, vacs_processed, salary_sum = 0, 0, 0
 
         for page in itertools.count(start=1):
+            response = requests.get(
+                url='https://api.hh.ru/vacancies/',
+                headers=hh_header,
+                params=params)
+            response.raise_for_status()
+            vacancies = response.json()
+
             for vac in vacancies['items']:
                 if vac['salary'] and vac['salary']['currency'] == 'RUR':
                     predicted_salary = predict_salary_hh(vac)
                     if predicted_salary:
                         salary_sum += predicted_salary
                         vacs_processed += 1
-            params['page'] = page
 
-            response = requests.get(
-                'https://api.hh.ru/vacancies/',
-                headers=HH_HEADER,
-                params=params)
-            response.raise_for_status()
-            vacancies = response.json()
+            if page == 1:
+                last_page = vacancies['pages']
+                vacs_found = vacancies['found']
 
             if page == last_page:
                 break
+            params['page'] = page
 
-        vacs_processed = 1 if not vacs_processed else vacs_processed
+        average_salary = int(
+            salary_sum / 1 if not vacs_processed else vacs_processed
+        )
         lang_stat[language] = {
-            'vacancies_found': vacancies['found'],
+            'vacancies_found': vacs_found,
             'vacancies_processed': vacs_processed,
-            'average_salary': int(salary_sum / vacs_processed)
+            'average_salary': average_salary
         }
     return lang_stat
 
 
 def get_printable_table(stat, table_caption, column_aligns):
-    if not stat:
-        return
-
     terminal_table = [[
         'Язык программирования',
         'Вакансий найдено',
@@ -173,7 +165,7 @@ def get_printable_table(stat, table_caption, column_aligns):
     table_instance = SingleTable(terminal_table, table_caption)
     for item_n, item in enumerate(column_aligns.items()):
         table_instance.justify_columns[item_n] = item
-    logger.info(f'\n{table_instance.table}')
+    logger.info(f'Результат:\n{table_instance.table}')
     return table_instance.table
 
 
@@ -187,15 +179,16 @@ if __name__ == '__main__':
     }
 
     prog_langs = [
+        'Fortran',
         'Python',
         'Java',
-        # 'JavaScript',
-        # 'C++',
-        # 'C',
-        # 'Delphi',
-        # 'GO',
-        # 'PHP',
-        # 'Ruby',
+        'JavaScript',
+        'C++',
+        'C',
+        'Delphi',
+        'GO',
+        'PHP',
+        'Ruby',
     ]
 
     logger = logging.getLogger('pl_stat')
@@ -206,8 +199,8 @@ if __name__ == '__main__':
     )
     logger.addHandler(log_handler)
 
-    hh_stat = get_proglang_stat_hh(prog_langs)
-    print(get_printable_table(hh_stat, 'HeadHunter. Москва', col_aligns))
+    # hh_stat = get_proglang_stat_hh(prog_langs)
+    # print(get_printable_table(hh_stat, 'HeadHunter. Москва', col_aligns))
 
     sj_stat = get_proglang_stat_sj(prog_langs)
     print(get_printable_table(sj_stat, 'SuperJob. Москва', col_aligns))
