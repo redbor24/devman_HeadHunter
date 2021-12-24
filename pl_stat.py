@@ -44,7 +44,6 @@ def predict_salary(salary_from, salary_to):
 
 
 def get_proglang_stat_sj(language):
-    global logger
     logger.info(f' Подсчёт количества вакансий для "{language}"...')
     sj_header = {
         'X-Api-App-Id': SJ_SECRET_KEY,
