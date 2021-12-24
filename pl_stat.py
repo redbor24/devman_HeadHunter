@@ -159,7 +159,13 @@ def get_proglangs_stat_hh(languages):
     return lang_stat
 
 
-def get_printable_table(stat, table_caption, column_aligns):
+def get_printable_table(stat, table_caption):
+    column_aligns = {
+        1: 'center',
+        2: 'center',
+        3: 'center',
+    }
+
     terminal_table = [[
         'Язык программирования',
         'Вакансий найдено',
@@ -176,19 +182,12 @@ def get_printable_table(stat, table_caption, column_aligns):
         )
 
     table_instance = SingleTable(terminal_table, table_caption)
-    for item_n, item in enumerate(column_aligns.items()):
-        table_instance.justify_columns[item_n] = item
+    table_instance.justify_columns.update(column_aligns)
     logger.info(f'Результат:\n{table_instance.table}')
     return table_instance.table
 
 
 if __name__ == '__main__':
-    col_aligns = {
-        1: 'center',
-        2: 'center',
-        3: 'center',
-    }
-
     prog_langs = [
         'Fortran',
         'Delphi',
@@ -202,8 +201,8 @@ if __name__ == '__main__':
         # 'Ruby',
     ]
 
-    hh_stat = get_proglangs_stat_hh(prog_langs)
-    print(get_printable_table(hh_stat, 'HeadHunter. Москва', col_aligns))
+    # hh_stat = get_proglangs_stat_hh(prog_langs)
+    # print(get_printable_table(hh_stat, 'HeadHunter. Москва'))
 
     sj_stat = get_proglangs_stat_sj(prog_langs)
-    print(get_printable_table(sj_stat, 'SuperJob. Москва', col_aligns))
+    print(get_printable_table(sj_stat, 'SuperJob. Москва'))
