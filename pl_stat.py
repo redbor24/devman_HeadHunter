@@ -56,7 +56,8 @@ def get_proglang_stat_sj(language):
         'count': sj_vacs_per_page,
         'keyword': language,
     }
-    vacs_found, vacs_processed, salary_sum = 0, 0, 0
+
+    vacs_processed, salary_sum = 0, 0
 
     for page in itertools.count(start=0):
         params['page'] = page
@@ -68,9 +69,6 @@ def get_proglang_stat_sj(language):
         response.raise_for_status()
         vacancies = response.json()
 
-        if page == 0:
-            vacs_found = vacancies['total']
-
         for vac in vacancies['objects']:
             if vac['currency'] == 'rub':
                 predicted_salary = predict_salary_sj(vac)
@@ -81,6 +79,7 @@ def get_proglang_stat_sj(language):
         if not vacancies['more']:
             break
 
+    vacs_found = vacancies['total']
     if vacs_processed:
         average_salary = int(salary_sum / vacs_processed)
     else:
@@ -103,8 +102,7 @@ def get_proglang_stat_hh(language):
         'text': language
     }
 
-    last_page = 0
-    vacs_found, vacs_processed, salary_sum = 0, 0, 0
+    vacs_processed, salary_sum = 0, 0
 
     for page in itertools.count(start=1):
         response = requests.get(
@@ -121,13 +119,13 @@ def get_proglang_stat_hh(language):
                     salary_sum += predicted_salary
                     vacs_processed += 1
 
-        if page == 1:
-            last_page = vacancies['pages']
-            vacs_found = vacancies['found']
-
+        last_page = vacancies['pages']
         if page == last_page:
             break
+
         params['page'] = page
+
+    vacs_found = vacancies['found']
 
     if vacs_processed:
         average_salary = int(salary_sum / vacs_processed)
@@ -189,9 +187,10 @@ def get_printable_table(stat, table_caption):
 
 if __name__ == '__main__':
     prog_langs = [
+        'ssdfsdf',
         'Fortran',
-        'Delphi',
-        'Python',
+        # 'Delphi',
+        # 'Python',
         # 'Java',
         # 'JavaScript',
         # 'C++',
@@ -201,8 +200,8 @@ if __name__ == '__main__':
         # 'Ruby',
     ]
 
-    # hh_stat = get_proglangs_stat_hh(prog_langs)
-    # print(get_printable_table(hh_stat, 'HeadHunter. Москва'))
+    hh_stat = get_proglangs_stat_hh(prog_langs)
+    print(get_printable_table(hh_stat, 'HeadHunter. Москва'))
 
-    sj_stat = get_proglangs_stat_sj(prog_langs)
-    print(get_printable_table(sj_stat, 'SuperJob. Москва'))
+    # sj_stat = get_proglangs_stat_sj(prog_langs)
+    # print(get_printable_table(sj_stat, 'SuperJob. Москва'))
