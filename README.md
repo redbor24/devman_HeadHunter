@@ -27,19 +27,9 @@ terminaltables==3.1.0
  - `SJ_SECRET_KEY=<value>` - токен для работы с [SuperJob.ru](http://SuperJob.ru) 
 ([получение токена](https://api.superjob.ru/register/))
 ### Список языков программирования для сбора статистики
-Модуль `config.py` переменная `PROG_LANGS`
+Модуль `pl_stat.py` переменная `prog_langs`
 ```
-prog_langs = [
-    'Python',
-    'Java',
-    'JavaScript',
-    'C++',
-    'C',
-    'Delphi',
-    'GO',
-    'PHP',
-    'Ruby',
-]
+prog_langs = [...]
 ```
 ### Запуск скрипта
 ```
