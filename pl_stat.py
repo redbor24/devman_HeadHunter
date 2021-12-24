@@ -1,10 +1,19 @@
 import itertools
 import logging
-import math
 
 import requests
 from decouple import config
 from terminaltables import SingleTable
+
+SJ_SECRET_KEY = config('SJ_SECRET_KEY', '')
+
+logger = logging.getLogger('pl_stat')
+logger.setLevel(logging.DEBUG)
+log_handler = logging.FileHandler('pl_stat.log', encoding='utf-8')
+log_handler.setFormatter(
+    logging.Formatter('%(asctime)s - %(message)s')
+)
+logger.addHandler(log_handler)
 
 
 def predict_salary_hh(vacancy):
@@ -175,16 +184,6 @@ def get_printable_table(stat, table_caption, column_aligns):
 
 
 if __name__ == '__main__':
-    SJ_SECRET_KEY = config('SJ_SECRET_KEY', '')
-
-    logger = logging.getLogger('pl_stat')
-    logger.setLevel(logging.DEBUG)
-    log_handler = logging.FileHandler('pl_stat.log', encoding='utf-8')
-    log_handler.setFormatter(
-        logging.Formatter('%(asctime)s - %(message)s')
-    )
-    logger.addHandler(log_handler)
-
     col_aligns = {
         1: 'center',
         2: 'center',
@@ -195,13 +194,13 @@ if __name__ == '__main__':
         'Fortran',
         'Delphi',
         'Python',
-        'Java',
-        'JavaScript',
-        'C++',
-        'C',
-        'GO',
-        'PHP',
-        'Ruby',
+        # 'Java',
+        # 'JavaScript',
+        # 'C++',
+        # 'C',
+        # 'GO',
+        # 'PHP',
+        # 'Ruby',
     ]
 
     hh_stat = get_proglangs_stat_hh(prog_langs)
