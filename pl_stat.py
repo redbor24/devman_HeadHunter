@@ -5,16 +5,6 @@ import requests
 from decouple import config
 from terminaltables import SingleTable
 
-SJ_SECRET_KEY = config('SJ_SECRET_KEY', '')
-
-logger = logging.getLogger('pl_stat')
-logger.setLevel(logging.DEBUG)
-log_handler = logging.FileHandler('pl_stat.log', encoding='utf-8')
-log_handler.setFormatter(
-    logging.Formatter('%(asctime)s - %(message)s')
-)
-logger.addHandler(log_handler)
-
 
 def predict_salary_hh(vacancy):
     vac_sal = vacancy['salary']
@@ -43,17 +33,16 @@ def predict_salary(salary_from, salary_to):
     return predicted_salary
 
 
-def get_proglang_stat_sj(language):
-    logger.info(f' Подсчёт количества вакансий для "{language}"...')
-    sj_header = {
-        'X-Api-App-Id': SJ_SECRET_KEY,
+def get_proglang_stat_sj(secret_key, language):
+    header = {
+        'X-Api-App-Id': secret_key,
     }
-    sj_catalog_index = 33
-    sj_vacs_per_page = 100
+    catalog_index = 33
+    vacs_per_page = 100
     params = {
         'town': 'Москва',
-        'catalogues': sj_catalog_index,
-        'count': sj_vacs_per_page,
+        'catalogues': catalog_index,
+        'count': vacs_per_page,
         'keyword': language,
     }
 
@@ -63,7 +52,7 @@ def get_proglang_stat_sj(language):
         params['page'] = page
         response = requests.get(
             url='https://api.superjob.ru/2.0/vacancies/',
-            headers=sj_header,
+            headers=header,
             params=params
         )
         response.raise_for_status()
@@ -93,8 +82,7 @@ def get_proglang_stat_sj(language):
 
 
 def get_proglang_stat_hh(language):
-    logger.info(f' Подсчёт количества вакансий для "{language}"...')
-    hh_header = {
+    header = {
         'content-type': 'application/json; charset=UTF-8',
     }
     params = {
@@ -107,7 +95,7 @@ def get_proglang_stat_hh(language):
     for page in itertools.count(start=1):
         response = requests.get(
             url='https://api.hh.ru/vacancies/',
-            headers=hh_header,
+            headers=header,
             params=params)
         response.raise_for_status()
         vacancies = response.json()
@@ -139,19 +127,23 @@ def get_proglang_stat_hh(language):
     }
 
 
-def get_proglangs_stat_sj(languages):
+def get_proglangs_stat_sj(languages, logger):
     logger.info('Сбор статистики для SuperJob.ru')
+    sj_secret_key = config('SJ_SECRET_KEY', '')
+
     lang_stat = {}
     for language in languages:
-        lang_stat[language] = get_proglang_stat_sj(language)
+        logger.info(f' Подсчёт количества вакансий для "{language}"...')
+        lang_stat[language] = get_proglang_stat_sj(sj_secret_key, language)
 
     return lang_stat
 
 
-def get_proglangs_stat_hh(languages):
+def get_proglangs_stat_hh(languages, logger):
     logger.info('Сбор статистики для HeadHunter.ru')
     lang_stat = {}
     for language in languages:
+        logger.info(f' Подсчёт количества вакансий для "{language}"...')
         lang_stat[language] = get_proglang_stat_hh(language)
 
     return lang_stat
@@ -181,27 +173,42 @@ def get_printable_table(stat, table_caption):
 
     table_instance = SingleTable(terminal_table, table_caption)
     table_instance.justify_columns.update(column_aligns)
-    logger.info(f'Результат:\n{table_instance.table}')
     return table_instance.table
 
 
-if __name__ == '__main__':
+def main():
     prog_langs = [
-        'ssdfsdf',
+        'Parseltang',
         'Fortran',
-        # 'Delphi',
-        # 'Python',
-        # 'Java',
-        # 'JavaScript',
-        # 'C++',
-        # 'C',
-        # 'GO',
-        # 'PHP',
-        # 'Ruby',
+        'Delphi',
+        'Python',
+        'Java',
+        'JavaScript',
+        'C++',
+        'C',
+        'GO',
+        'PHP',
+        'Ruby',
     ]
 
-    hh_stat = get_proglangs_stat_hh(prog_langs)
-    print(get_printable_table(hh_stat, 'HeadHunter. Москва'))
+    stat_logger = logging.getLogger('pl_stat')
+    stat_logger.setLevel(logging.INFO)
+    log_handler = logging.FileHandler('pl_stat.log', encoding='utf-8')
+    log_handler.setFormatter(
+        logging.Formatter('%(asctime)s - %(message)s')
+    )
+    stat_logger.addHandler(log_handler)
 
-    # sj_stat = get_proglangs_stat_sj(prog_langs)
-    # print(get_printable_table(sj_stat, 'SuperJob. Москва'))
+    hh_stat = get_proglangs_stat_hh(prog_langs, stat_logger)
+    printable_table = get_printable_table(hh_stat, 'HeadHunter. Москва')
+    print(printable_table)
+    stat_logger.info(f'Результат:\n{printable_table}')
+
+    sj_stat = get_proglangs_stat_sj(prog_langs, stat_logger)
+    printable_table = get_printable_table(sj_stat, 'SuperJob. Москва')
+    print(printable_table)
+    stat_logger.info(f'Результат:\n{printable_table}')
+
+
+if __name__ == '__main__':
+    main()
