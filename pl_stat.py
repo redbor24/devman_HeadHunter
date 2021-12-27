@@ -11,14 +11,16 @@ logger = logging.getLogger('pl_stat')
 def predict_salary_hh(vacancy):
     vac_sal = vacancy['salary']
 
-    if not vac_sal or not vac_sal['currency']:
+    if not vac_sal\
+            or not vac_sal['currency']\
+            or vac_sal['currency'] != 'RUR':
         return None
 
     return predict_salary(vac_sal['from'], vac_sal['to'])
 
 
 def predict_salary_sj(vacancy):
-    if not vacancy['currency']:
+    if not vacancy['currency'] or vacancy['currency'] != 'rub':
         return None
 
     return predict_salary(vacancy['payment_from'], vacancy['payment_to'])
@@ -61,11 +63,10 @@ def get_proglang_stat_sj(secret_key, language):
         vacancies = response.json()
 
         for vac in vacancies['objects']:
-            if vac['currency'] == 'rub':
-                predicted_salary = predict_salary_sj(vac)
-                if predicted_salary:
-                    salary_sum += predicted_salary
-                    vacs_processed += 1
+            predicted_salary = predict_salary_sj(vac)
+            if predicted_salary:
+                salary_sum += predicted_salary
+                vacs_processed += 1
 
         if not vacancies['more']:
             break
@@ -103,11 +104,10 @@ def get_proglang_stat_hh(language):
         vacancies = response.json()
 
         for vac in vacancies['items']:
-            if vac['salary'] and vac['salary']['currency'] == 'RUR':
-                predicted_salary = predict_salary_hh(vac)
-                if predicted_salary:
-                    salary_sum += predicted_salary
-                    vacs_processed += 1
+            predicted_salary = predict_salary_hh(vac)
+            if predicted_salary:
+                salary_sum += predicted_salary
+                vacs_processed += 1
 
         last_page = vacancies['pages']
         if page == last_page:
@@ -183,14 +183,14 @@ def main():
         'Parseltang',
         'Fortran',
         'Delphi',
-        'Python',
-        'Java',
-        'JavaScript',
-        'C++',
-        'C',
-        'GO',
-        'PHP',
-        'Ruby',
+        # 'Python',
+        # 'Java',
+        # 'JavaScript',
+        # 'C++',
+        # 'C',
+        # 'GO',
+        # 'PHP',
+        # 'Ruby',
     ]
 
     logger.setLevel(logging.INFO)
