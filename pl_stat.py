@@ -8,7 +8,7 @@ from terminaltables import SingleTable
 logger = logging.getLogger('pl_stat')
 
 
-def predict_salary_hh(vacancy):
+def salary_predict_hh(vacancy):
     vac_sal = vacancy['salary']
 
     if not vac_sal\
@@ -16,17 +16,17 @@ def predict_salary_hh(vacancy):
             or vac_sal['currency'] != 'RUR':
         return None
 
-    return predict_salary(vac_sal['from'], vac_sal['to'])
+    return salary_predict(vac_sal['from'], vac_sal['to'])
 
 
-def predict_salary_sj(vacancy):
+def salary_predict_sj(vacancy):
     if not vacancy['currency'] or vacancy['currency'] != 'rub':
         return None
 
-    return predict_salary(vacancy['payment_from'], vacancy['payment_to'])
+    return salary_predict(vacancy['payment_from'], vacancy['payment_to'])
 
 
-def predict_salary(salary_from, salary_to):
+def salary_predict(salary_from, salary_to):
     predicted_salary = 0
     if salary_to and salary_from:
         predicted_salary = (salary_from + salary_to) / 2
@@ -37,7 +37,7 @@ def predict_salary(salary_from, salary_to):
     return predicted_salary
 
 
-def get_proglang_stat_sj(secret_key, language):
+def get_stat_by_proglang_sj(secret_key, language):
     header = {
         'X-Api-App-Id': secret_key,
     }
@@ -63,7 +63,7 @@ def get_proglang_stat_sj(secret_key, language):
         vacancies = response.json()
 
         for vac in vacancies['objects']:
-            predicted_salary = predict_salary_sj(vac)
+            predicted_salary = salary_predict_sj(vac)
             if predicted_salary:
                 salary_sum += predicted_salary
                 vacs_processed += 1
@@ -84,7 +84,7 @@ def get_proglang_stat_sj(secret_key, language):
     }
 
 
-def get_proglang_stat_hh(language):
+def get_stat_by_proglang_hh(language):
     header = {
         'content-type': 'application/json; charset=UTF-8',
     }
@@ -104,7 +104,7 @@ def get_proglang_stat_hh(language):
         vacancies = response.json()
 
         for vac in vacancies['items']:
-            predicted_salary = predict_salary_hh(vac)
+            predicted_salary = salary_predict_hh(vac)
             if predicted_salary:
                 salary_sum += predicted_salary
                 vacs_processed += 1
@@ -129,23 +129,23 @@ def get_proglang_stat_hh(language):
     }
 
 
-def get_proglangs_stat_sj(secret_key, languages):
+def get_sj_statistic(secret_key, languages):
     logger.info('Сбор статистики для SuperJob.ru')
 
     lang_stat = {}
     for language in languages:
         logger.info(f' Подсчёт количества вакансий для "{language}"...')
-        lang_stat[language] = get_proglang_stat_sj(secret_key, language)
+        lang_stat[language] = get_stat_by_proglang_sj(secret_key, language)
 
     return lang_stat
 
 
-def get_proglangs_stat_hh(languages):
+def get_hh_statistic(languages):
     logger.info('Сбор статистики для HeadHunter.ru')
     lang_stat = {}
     for language in languages:
         logger.info(f' Подсчёт количества вакансий для "{language}"...')
-        lang_stat[language] = get_proglang_stat_hh(language)
+        lang_stat[language] = get_stat_by_proglang_hh(language)
 
     return lang_stat
 
@@ -201,12 +201,12 @@ def main():
     )
     logger.addHandler(log_handler)
 
-    hh_stat = get_proglangs_stat_hh(prog_langs)
+    hh_stat = get_hh_statistic(prog_langs)
     printable_table = get_printable_table(hh_stat, 'HeadHunter. Москва')
     print(printable_table)
     logger.info(f'Результат:\n{printable_table}')
 
-    sj_stat = get_proglangs_stat_sj(sj_secret_key, prog_langs)
+    sj_stat = get_sj_statistic(sj_secret_key, prog_langs)
     printable_table = get_printable_table(sj_stat, 'SuperJob. Москва')
     print(printable_table)
     logger.info(f'Результат:\n{printable_table}')
