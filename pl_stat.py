@@ -129,14 +129,13 @@ def get_proglang_stat_hh(language):
     }
 
 
-def get_proglangs_stat_sj(languages):
+def get_proglangs_stat_sj(secret_key, languages):
     logger.info('Сбор статистики для SuperJob.ru')
-    sj_secret_key = config('SJ_SECRET_KEY', '')
 
     lang_stat = {}
     for language in languages:
         logger.info(f' Подсчёт количества вакансий для "{language}"...')
-        lang_stat[language] = get_proglang_stat_sj(sj_secret_key, language)
+        lang_stat[language] = get_proglang_stat_sj(secret_key, language)
 
     return lang_stat
 
@@ -193,6 +192,8 @@ def main():
         # 'Ruby',
     ]
 
+    sj_secret_key = config('SJ_SECRET_KEY', '')
+
     logger.setLevel(logging.INFO)
     log_handler = logging.FileHandler('pl_stat.log', encoding='utf-8')
     log_handler.setFormatter(
@@ -205,7 +206,7 @@ def main():
     print(printable_table)
     logger.info(f'Результат:\n{printable_table}')
 
-    sj_stat = get_proglangs_stat_sj(prog_langs)
+    sj_stat = get_proglangs_stat_sj(sj_secret_key, prog_langs)
     printable_table = get_printable_table(sj_stat, 'SuperJob. Москва')
     print(printable_table)
     logger.info(f'Результат:\n{printable_table}')
