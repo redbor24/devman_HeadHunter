@@ -5,6 +5,8 @@ import requests
 from decouple import config
 from terminaltables import SingleTable
 
+logger = logging.getLogger('pl_stat')
+
 
 def predict_salary_hh(vacancy):
     vac_sal = vacancy['salary']
@@ -127,7 +129,7 @@ def get_proglang_stat_hh(language):
     }
 
 
-def get_proglangs_stat_sj(languages, logger):
+def get_proglangs_stat_sj(languages):
     logger.info('Сбор статистики для SuperJob.ru')
     sj_secret_key = config('SJ_SECRET_KEY', '')
 
@@ -139,7 +141,7 @@ def get_proglangs_stat_sj(languages, logger):
     return lang_stat
 
 
-def get_proglangs_stat_hh(languages, logger):
+def get_proglangs_stat_hh(languages):
     logger.info('Сбор статистики для HeadHunter.ru')
     lang_stat = {}
     for language in languages:
@@ -191,23 +193,22 @@ def main():
         'Ruby',
     ]
 
-    stat_logger = logging.getLogger('pl_stat')
-    stat_logger.setLevel(logging.INFO)
+    logger.setLevel(logging.INFO)
     log_handler = logging.FileHandler('pl_stat.log', encoding='utf-8')
     log_handler.setFormatter(
         logging.Formatter('%(asctime)s - %(message)s')
     )
-    stat_logger.addHandler(log_handler)
+    logger.addHandler(log_handler)
 
-    hh_stat = get_proglangs_stat_hh(prog_langs, stat_logger)
+    hh_stat = get_proglangs_stat_hh(prog_langs)
     printable_table = get_printable_table(hh_stat, 'HeadHunter. Москва')
     print(printable_table)
-    stat_logger.info(f'Результат:\n{printable_table}')
+    logger.info(f'Результат:\n{printable_table}')
 
-    sj_stat = get_proglangs_stat_sj(prog_langs, stat_logger)
+    sj_stat = get_proglangs_stat_sj(prog_langs)
     printable_table = get_printable_table(sj_stat, 'SuperJob. Москва')
     print(printable_table)
-    stat_logger.info(f'Результат:\n{printable_table}')
+    logger.info(f'Результат:\n{printable_table}')
 
 
 if __name__ == '__main__':
