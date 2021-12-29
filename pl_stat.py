@@ -37,7 +37,7 @@ def predict_salary(salary_from, salary_to):
     return predicted_salary
 
 
-def get_stat_by_proglang_sj(secret_key, language):
+def get_sj_stat_by_proglang(secret_key, language):
     header = {
         'X-Api-App-Id': secret_key,
     }
@@ -84,7 +84,7 @@ def get_stat_by_proglang_sj(secret_key, language):
     }
 
 
-def get_stat_by_proglang_hh(language):
+def get_hh_stat_by_proglang(language):
     header = {
         'content-type': 'application/json; charset=UTF-8',
     }
@@ -135,7 +135,7 @@ def get_sj_statistic(secret_key, languages):
     lang_stat = {}
     for language in languages:
         logger.info(f' Подсчёт количества вакансий для "{language}"...')
-        lang_stat[language] = get_stat_by_proglang_sj(secret_key, language)
+        lang_stat[language] = get_sj_stat_by_proglang(secret_key, language)
 
     return lang_stat
 
@@ -145,7 +145,7 @@ def get_hh_statistic(languages):
     lang_stat = {}
     for language in languages:
         logger.info(f' Подсчёт количества вакансий для "{language}"...')
-        lang_stat[language] = get_stat_by_proglang_hh(language)
+        lang_stat[language] = get_hh_stat_by_proglang(language)
 
     return lang_stat
 
