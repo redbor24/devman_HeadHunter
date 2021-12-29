@@ -11,9 +11,7 @@ logger = logging.getLogger('pl_stat')
 def predict_hh_salary(vacancy):
     vac_sal = vacancy['salary']
 
-    if not vac_sal\
-            or not vac_sal['currency']\
-            or vac_sal['currency'] != 'RUR':
+    if not vac_sal or vac_sal['currency'] != 'RUR':
         return None
 
     return predict_salary(vac_sal['from'], vac_sal['to'])
