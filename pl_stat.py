@@ -8,7 +8,7 @@ from terminaltables import SingleTable
 logger = logging.getLogger('pl_stat')
 
 
-def salary_predict_hh(vacancy):
+def predict_hh_salary(vacancy):
     vac_sal = vacancy['salary']
 
     if not vac_sal\
@@ -16,17 +16,17 @@ def salary_predict_hh(vacancy):
             or vac_sal['currency'] != 'RUR':
         return None
 
-    return salary_predict(vac_sal['from'], vac_sal['to'])
+    return predict_salary(vac_sal['from'], vac_sal['to'])
 
 
-def salary_predict_sj(vacancy):
+def predict_sj_salary(vacancy):
     if not vacancy['currency'] or vacancy['currency'] != 'rub':
         return None
 
-    return salary_predict(vacancy['payment_from'], vacancy['payment_to'])
+    return predict_salary(vacancy['payment_from'], vacancy['payment_to'])
 
 
-def salary_predict(salary_from, salary_to):
+def predict_salary(salary_from, salary_to):
     predicted_salary = 0
     if salary_to and salary_from:
         predicted_salary = (salary_from + salary_to) / 2
@@ -63,7 +63,7 @@ def get_stat_by_proglang_sj(secret_key, language):
         vacancies = response.json()
 
         for vac in vacancies['objects']:
-            predicted_salary = salary_predict_sj(vac)
+            predicted_salary = predict_sj_salary(vac)
             if predicted_salary:
                 salary_sum += predicted_salary
                 vacs_processed += 1
@@ -104,7 +104,7 @@ def get_stat_by_proglang_hh(language):
         vacancies = response.json()
 
         for vac in vacancies['items']:
-            predicted_salary = salary_predict_hh(vac)
+            predicted_salary = predict_hh_salary(vac)
             if predicted_salary:
                 salary_sum += predicted_salary
                 vacs_processed += 1
@@ -182,14 +182,14 @@ def main():
         'Parseltang',
         'Fortran',
         'Delphi',
-        # 'Python',
-        # 'Java',
-        # 'JavaScript',
-        # 'C++',
-        # 'C',
-        # 'GO',
-        # 'PHP',
-        # 'Ruby',
+        'Python',
+        'Java',
+        'JavaScript',
+        'C++',
+        'C',
+        'GO',
+        'PHP',
+        'Ruby',
     ]
 
     sj_secret_key = config('SJ_SECRET_KEY', '')
